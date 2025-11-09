@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Noir Hound Digital</title>
+    <meta name="description" content="Noir Hound Digital — Games and interactive experiences" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <script>
+      // Set initial theme asap to avoid FOUC
+      (function(){
+        try {
+          const stored = localStorage.getItem('theme');
+          // Ignore system preference; default to light unless user has a stored choice
+          const theme = stored || 'light';
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {}
+      })();
+    </script>
+    <link rel="stylesheet" href="./styles/tailwind.css" />
+    <!-- Import map for Three.js modules -->
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/examples/jsm/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+        "postprocessing": "https://esm.sh/postprocessing@6.35.3?external=three"
+      }
+    }
+    </script>
+    <link rel="stylesheet" href="./styles/custom.css" />
+    <link rel="icon" href="./assets/NHD_combined.png" type="image/png" />
+  </head>
+  <body class="font-ui bg-[var(--bg)] text-[var(--fg)]">
+    <a class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:bg-[var(--bg-2)] focus:text-[var(--fg)] focus:px-3 focus:py-2 focus:rounded" href="#menu">Skip to navigation</a>
+
+    <!-- Theme toggle -->
+    <button id="themeToggle" aria-label="Toggle theme" class="fixed right-4 top-4 z-50 inline-flex items-center justify-center w-10 h-10 rounded-full border border-[var(--border)] bg-[var(--bg-2)] hover:bg-[var(--bg-3)] transition">
+      <svg id="iconSun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="5"/>
+        <line x1="12" y1="1" x2="12" y2="3"/>
+        <line x1="12" y1="21" x2="12" y2="23"/>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+        <line x1="1" y1="12" x2="3" y2="12"/>
+        <line x1="21" y1="12" x2="23" y2="12"/>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      </svg>
+      <svg id="iconMoon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-6 h-6" fill="currentColor" aria-hidden="true">
+        <path d="M21.64 13a9 9 0 01-11.31-11.3 1 1 0 00-1.26-1.26A11 11 0 1022.9 14.26 1 1 0 0021.64 13z"/>
+      </svg>
+    </button>
+
+  
+
+    <!-- HERO: 3D logo scene (Three.js) -->
+  <section id="hero" class="relative w-full select-none">
+      <div id="logoStage" class="relative mx-auto" data-rest-angle="15" style="aspect-ratio: 16 / 9;">
+        <div id="threeContainer" class="w-full h-full"></div>
+        <!-- Light controls overlay -->
+        <div class="absolute left-2 right-2 top-2 z-40 flex flex-wrap items-center gap-1 controls-mini collapsed" style="display: none;">
+          <!-- Lig (lights) grouped panel: toggles, intensity, ambient/boost, test spot/helper -->
+          <details class="flex flex-col gap-1 text-[10px] border border-[var(--border)] p-1 rounded bg-[var(--bg-2)]">
+            <summary class="cursor-pointer select-none font-semibold mb-1">Lig</summary>
+            <div class="flex flex-wrap items-center gap-1">
+              <button class="btn px-1 py-0.5" data-light-toggle="light backward">Backlight</button>
+              <button class="btn px-1 py-0.5" data-light-toggle="lightfront">Front light</button>
+              <button class="btn px-1 py-0.5" data-light-toggle="LightMoving">Moving light</button>
+              <label class="flex items-center gap-1">Intensity
+                <input id="lightsIntensity" type="range" min="0" max="200" step="1" value="100" class="w-32" />
+                <span id="lightsIntensityValue" class="tabular-nums">100</span>
+              </label>
+              <button class="btn px-1 py-0.5" data-debug="ambient" title="Toggle ambient light">Ambient</button>
+              <button class="btn px-1 py-0.5" data-debug="boost" title="Boost all lights">Boost</button>
+              <button class="btn px-1 py-0.5" data-debug="test-spot" title="Add test SpotLight">Test Spot</button>
+              <button class="btn px-1 py-0.5" data-debug="spot-helper" title="Toggle moving Spot helper">Spot Helper</button>
+              <label class="flex items-center gap-1">Beam
+                <input id="movingLightAngle" type="range" min="5" max="70" step="1" value="30" class="w-20" />
+              </label>
+            </div>
+          </details>
+          <!-- Sha (shadow tuning) -->
+          <details class="flex flex-col gap-1 text-[10px] border border-[var(--border)] p-1 rounded bg-[var(--bg-2)]">
+            <summary class="cursor-pointer select-none font-semibold mb-1">Sha</summary>
+            <div class="flex flex-wrap gap-1">
+              <button class="btn px-1 py-0.5" data-shadow-size="512">512</button>
+              <button class="btn px-1 py-0.5" data-shadow-size="1024">1024</button>
+              <button class="btn px-1 py-0.5" data-shadow-size="2048">2048</button>
+              <button class="btn px-1 py-0.5" data-shadow-size="4096">4096</button>
+            </div>
+            <label class="flex items-center gap-1">Bias
+              <input id="shadowBias" type="range" min="0" max="0.003" step="0.0001" value="0.0015" class="w-24" />
+              <span id="shadowBiasValue" class="tabular-nums">0.0015</span>
+            </label>
+            <label class="flex items-center gap-1">Normal Bias
+              <input id="shadowNormalBias" type="range" min="0" max="2" step="0.01" value="0.00" class="w-24" />
+              <span id="shadowNormalBiasValue" class="tabular-nums">0.00</span>
+            </label>
+            <label class="flex items-center gap-1">Penumbra
+              <input id="spotPenumbra" type="range" min="0" max="1" step="0.01" value="0.35" class="w-24" />
+              <span id="spotPenumbraValue" class="tabular-nums">0.35</span>
+            </label>
+            <label class="flex items-center gap-1">Logo Y
+              <input id="logoLightYOffset" type="range" min="0" max="2" step="0.01" value="0.50" class="w-20" />
+            </label>
+          </details>
+          <!-- Fil (filters): glitch & canvas filters -->
+          <details class="flex flex-col gap-1 text-[10px] border border-[var(--border)] p-1 rounded bg-[var(--bg-2)]">
+            <summary class="cursor-pointer select-none font-semibold mb-1">Fil</summary>
+            <div class="flex flex-wrap gap-1">
+              <button class="btn" id="glitchStartBtn" title="Enable postprocess glitch (continuous)">Start glitch</button>
+              <button class="btn" id="glitchStopBtn" title="Disable postprocess glitch">Stop glitch</button>
+              <button class="btn" data-debug="mono" title="Toggle monochrome filter">Mono</button>
+              <button class="btn" data-debug="filters-off" title="Disable all filters (keeps invert if dark)">Filters Off</button>
+            </div>
+          </details>
+
+          <!-- Mat (materials): material-related toggles -->
+          <details class="flex flex-col gap-1 text-[10px] border border-[var(--border)] p-1 rounded bg-[var(--bg-2)]">
+            <summary class="cursor-pointer select-none font-semibold mb-1">Mat</summary>
+            <div class="flex flex-wrap gap-1">
+              <button class="btn" data-debug="wire">Wireframe</button>
+              <button class="btn" id="dogMaterialToggle" title="Toggle Dog original/test material">Dog Material</button>
+            </div>
+          </details>
+
+          <!-- Log (logging actions) -->
+          <details class="flex flex-col gap-1 text-[10px] border border-[var(--border)] p-1 rounded bg-[var(--bg-2)]">
+            <summary class="cursor-pointer select-none font-semibold mb-1">Log</summary>
+            <div class="flex flex-wrap gap-1">
+              <button class="btn" data-debug="materials">Log Materials</button>
+            </div>
+          </details>
+
+          <!-- Deb (debug) reduced -->
+          <details class="flex flex-col gap-1 text-[10px] border border-[var(--border)] p-1 rounded bg-[var(--bg-2)]">
+            <summary class="cursor-pointer select-none font-semibold mb-1">Deb</summary>
+            <div class="flex flex-wrap gap-1">
+              <button class="btn" data-debug="axes">Axes</button>
+              <button class="btn" data-debug="bounds">Bounds</button>
+            </div>
+          </details>
+          <!-- Camera settings -->
+          <details class="flex flex-col gap-1 text-[10px] border border-[var(--border)] p-1 rounded bg-[var(--bg-2)]">
+            <summary class="cursor-pointer select-none font-semibold mb-1">Camera</summary>
+            <div class="flex items-center gap-2 flex-wrap">
+              <label class="flex items-center gap-1">Lens (mm)
+                <input id="camLens" type="number" min="1" step="1" value="1000" class="w-16 px-1 py-0.5 bg-[var(--bg-3)] border border-[var(--border)] rounded" />
+              </label>
+              <label class="flex items-center gap-1">Sensor H (mm)
+                <input id="camSensorH" type="number" min="1" step="0.1" value="30" class="w-16 px-1 py-0.5 bg-[var(--bg-3)] border border-[var(--border)] rounded" />
+              </label>
+              <button class="btn" data-camera="apply-lens">Apply Lens</button>
+              <button class="btn" data-camera="print">Print Camera</button>
+              <span class="ml-2">FOV: <span id="camFovOut" class="tabular-nums">–</span>°</span>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- MENU -->
+    <nav id="menu" class="w-full py-8 md:py-12">
+      <ul class="flex items-center justify-center font-typewriter text-xl md:text-2xl" style="gap: 6rem;">
+        <li><a href="#hero" data-link="home" class="menu-link hover:opacity-80">Home</a></li>
+        <li><button data-link="games" class="menu-link hover:opacity-80">Games</button></li>
+        <li><button data-link="about" class="menu-link hover:opacity-80">About</button></li>
+      </ul>
+      <div class="nav-divider" aria-hidden="true"></div>
+    </nav>
+
+    <!-- CONTENT: Games -->
+    <section id="gamesSection" class="content-section hidden px-4 md:px-8">
+      <h2 class="font-typewriter text-2xl md:text-3xl mb-4 text-center"></h2>
+      <p class="opacity-80 mb-6 text-center"></p>
+      <div class="relative max-w-5xl mx-auto">
+        <button class="carousel-prev" aria-label="Previous">‹</button>
+        <div class="carousel-track overflow-hidden rounded border border-[var(--border)] bg-[var(--bg-2)]">
+          <div class="carousel-inner flex transition-transform duration-300 ease-out">
+            <article class="carousel-item min-w-full p-6 grid md:grid-cols-2 gap-6 items-center">
+              <div class="aspect-video bg-[var(--bg-3)] border border-[var(--border)] rounded overflow-hidden">
+                <img src="./assets/drunkenhog_image_for_website_thumbnail.png" alt="Drunken Hog game thumbnail" class="w-full h-full object-cover" />
+              </div>
+              <div>
+                <h3 class="font-typewriter text-xl mb-2">Drunken Hog</h3>
+                <p class="font-typewriter opacity-80 mb-4 typewriter-text" data-text="You are now proud owned of Drunken Hog! Oink! Well, not yet, we are brewing hard on it.
+
+Releasing in 2026
+
+Consider wishlisting:">You are now proud owned of Drunken Hog! Oink! Well, not yet, we are brewing hard on it.<br><br>Releasing in 2026<br><br>Consider wishlisting:</p>
+                <div class="flex gap-3">
+                  <a class="btn" href="#" aria-disabled="true">Steam</a>
+                  <a class="btn" href="#" aria-disabled="true">Website</a>
+                </div>
+              </div>
+            </article>
+            <article class="carousel-item min-w-full p-6 grid md:grid-cols-2 gap-6 items-center">
+              <div class="aspect-video bg-[var(--bg-3)] border border-[var(--border)] rounded flex items-center justify-center">Trailer/video placeholder</div>
+              <div>
+                <h3 class="font-typewriter text-xl mb-2">Game Title Two</h3>
+                <p class="font-typewriter opacity-80 mb-4 typewriter-text" data-text="Brief description for a second game.">Brief description for a second game.</p>
+                <div class="flex gap-3">
+                  <a class="btn" href="#" aria-disabled="true">Steam</a>
+                  <a class="btn" href="#" aria-disabled="true">Website</a>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+        <button class="carousel-next" aria-label="Next">›</button>
+      </div>
+    </section>
+
+    <!-- CONTENT: About -->
+    <section id="aboutSection" class="content-section hidden px-4 md:px-8">
+      <div class="max-w-5xl mx-auto about-layout">
+        <!-- Title and description -->
+        <div class="about-text">
+          <h2 class="font-typewriter text-2xl md:text-3xl mb-4">Hi, it's us</h2>
+          <p id="aboutIntro" class="typewriter opacity-90" data-text="We are just two guys. We make games. Buy them so we can make more."></p>
+        </div>
+        
+        <!-- Left portrait -->
+        <figure class="text-center">
+          <img src="./assets/team1.jpg" alt="Jokur portrait" width="369" height="470" class="mx-auto w-40 h-40 md:w-52 md:h-52 border border-[var(--border)] rounded object-cover bg-[var(--bg-2)]" />
+          <figcaption class="mt-2 font-typewriter">Eppu Nissinen</figcaption>
+        </figure>
+        
+        <!-- Right portrait -->
+        <figure class="text-center">
+          <img src="./assets/team2.jpg" alt="Badman portrait" width="369" height="470" class="mx-auto w-40 h-40 md:w-52 md:h-52 border border-[var(--border)] rounded object-cover bg-[var(--bg-2)]" />
+          <figcaption class="mt-2 font-typewriter">Johannes Koukkari</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <footer class="py-12 text-center opacity-60 text-sm">
+      © <span id="year"></span> Noir Hound Digital. All rights reserved.
+    </footer>
+
+    <script src="./scripts/main.js" type="module"></script>
+    <script src="./scripts/logoScene.js" type="module"></script>
+  </body>
+</html>
